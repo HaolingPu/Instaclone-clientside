@@ -1,0 +1,96 @@
+body {
+    background: rgb(217, 246, 246);
+    font-family: 'Courier New';
+}
+
+
+div.important {
+    font-weight: bold;
+    font-size: 1000%;
+}
+
+
+
+p {
+    display: inline;
+    margin: 0;
+    font-size: larger;
+}
+
+div {
+    border-radius: 5px;
+    border: 2px solid #94e1e9;
+    margin: 10px;
+    margin-left: auto;
+}
+
+.image1 {
+    width: 50px;
+    height: 50px;
+}
+
+.image2 {
+    width: 80%; /* Make the image responsive */
+    height: auto; /* Maintain aspect ratio */
+    margin: 10px auto; /* Top and bottom margins 10px, left and right margins auto */
+    display: block;
+}
+
+
+.post {
+    width: 80%; /* Adjust width as necessary */
+    margin: 0 auto; /* Center the post */
+    background: #fff; /* Background color for the post */
+    border: 1px solid #ccc; /* Border around the post */
+    padding: 15px; /* Padding inside the post */
+}
+
+.comment {
+    display: flex;
+    align-items: center;
+}
+
+.time {
+    color: gray;
+    font-weight: bold;
+    float: right;
+    font-size: large;
+}
+
+.username {
+    font-weight: bold;
+    font-size: 30px;
+}
+
+.post-container {
+    display: flex;
+    align-items: center;
+    margin: 20px;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 15px;
+  }
+  
+  .post-image {
+    width: 10%; /* Adjust the width as needed */
+    height: auto;
+    margin-right: 20px;
+  }
+  
+  .post-content {
+    width: 40%; /* Adjust the width as needed */
+  }
+
+
+.stats {
+    font-size: 1em;
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
+    margin-left: 1.0em;
+}
+
+span {
+    font-size: x-large;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 300;
+}

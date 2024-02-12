@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>insta485</title>
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <a href="/">Insta 485</a>
+    <a href="/explore/">explore</a> | <a href="/users/{{logname}}/">{{logname}}</a>
+    <br>
+
+    <h1>{{username}}</h1>
+
+    {% if username == logname %}
+    <a href="/accounts/edit/">Edit profile</a>
+    <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+    <form action="/accounts/logout/" method="post" enctype="multipart/form-data">
+        <input type="submit" name="logout" value="Logout" />
+    </form>
+    <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+    <form action="/posts/?target=/users/{{username}}/" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required />
+        <input type="submit" name="create_post" value="upload new post" />
+        <input type="hidden" name="operation" value="create" />
+    </form>
+
+    {% elif logname_follows_username %}
+    following
+    <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+    <form action="/following/?target=/users/{{username}}/" method="post" enctype="multipart/form-data">
+        <input type="submit" name="unfollow" value="unfollow" />
+        <input type="hidden" name="username" value="{{username}}" />
+        <input type="hidden" name="operation" value="unfollow" />
+    </form>
+
+    {% else %}
+    not following
+    <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+    <form action="/following/?target=/users/{{username}}/" method="post" enctype="multipart/form-data">
+        <input type="submit" name="follow" value="follow" />
+        <input type="hidden" name="username" value="{{username}}" />
+        <input type="hidden" name="operation" value="follow" />
+    </form>
+
+    {% endif %}
+
+    {% if total_posts == 1 %}
+    {{total_posts}} post
+    {% else %}
+    {{total_posts}} posts
+    {% endif %}
+    <a href="/users/{{username}}/followers/">
+        {% if followers == 1 %}
+        {{followers}} follower
+        {% else %}
+        {{followers}} followers
+        {% endif %}
+    </a>
+    <a href="/users/{{username}}/following/">{{following}} following</a>
+    {{fullname}}
+    <br>
+    {% if total_posts == 0 %}
+        No posts yet.
+    {% endif %}
+
+    {% for p in posts %}
+    <div>
+        <a href="/posts/{{p.postid}}/"><img src="/uploads/{{p.img_url}}" alt="h"></a>
+    </div>
+    {% endfor %}
+
+
+</body>
+
+
+</html>

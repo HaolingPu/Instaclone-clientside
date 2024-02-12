@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>insta485</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+</head>
+<body>
+    <h1>
+        <a href="/" style="font-size: xx-large;">HOME</a>
+        <span>insta485</span>
+        <span style="float: right;">
+            <a href="/explore/">explore</a> |
+            <a href="/users/{{logname}}/">{{logname}}</a>
+        </span>
+    </h1>
+    <hr>
+    <span style="font-size: x-large;">{{ account_name }}</span>
+    <form action="/accounts/?target=/accounts/create/" method="post" enctype="multipart/form-data">
+    <input type="submit" name="delete" value="confirm delete account"/>
+    <input type="hidden" name="operation" value="delete"/>
+</form>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>insta485</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+</head>
+<body>
+    <h1>
+        <a href="/" style="font-size: xx-large;">HOME</a>
+        <span>insta485</span>
+        <span style="float: right;">
+            <a href="/explore/">explore</a> |
+            <a href="/users/{{logname}}/">{{logname}}</a>
+        </span>
+    </h1>
+    <hr>
+    <form action="/accounts/?target=/" method="post" enctype="multipart/form-data">
+      <input type="text" name="username" required/>
+      <input type="password" name="password" required/>
+      <input type="submit" value="login"/>
+      <input type="hidden" name="operation" value="login"/>
+  </form>
+  <p>
+    Don't have an account?
+    <a href="{{ create_account_link }}">Sign up</a>
+  </p>
+</body>
+</html>

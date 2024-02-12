@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# insta485test
+
+
+# Stop on errors, print commands
+# See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -Eeuo pipefail
+set -x
+
+# Runs pycodestyle insta485generator
+pycodestyle insta485
+
+# Runs pydocstyle insta485generator
+pydocstyle insta485
+
+# Runs pylint insta485generator
+pylint insta485
+
+pytest -v tests
+
+# Validates hand-coded HTML in html/ using html5validator
+#html5validator --ignore JAVA_TOOL_OPTIONS --root html
+
+# Validates generated HTML in insta485/html/ using html5validator
+#html5validator --ignore JAVA_TOOL_OPTIONS --root insta485/html

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>insta485</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+</head>
+<body>
+    <h1>
+        <a href="/" style="font-size: xx-large;">HOME</a>
+        <span>insta485</span>
+        <span style="float: right;">
+            <a href="/explore/">explore</a> |
+            <a href="/users/{{logname}}/">{{logname}}</a>
+        </span>
+    </h1>
+    <hr>
+    <h2>Discover People</h2>
+    {% for user in not_following %}
+    <div>
+        <img src="{{url_for('uploaded_file', filename=user.img_url)}}" alt="{{ user.username }}"
+            style="width: 50px; height: 50px;">
+        <a href="/users/{{ user.username }}/"><span>{{ user.username }}</span></a>
+        <form action="/following/?target=/explore/" method="post" enctype="multipart/form-data">
+            <input type="submit" name="follow" value="follow" />
+            <input type="hidden" name="username" value="{{user.username}}" />
+            <input type="hidden" name="operation" value="follow" />
+        </form>
+    </div>
+    {% endfor %}
+</body>
+</html>
