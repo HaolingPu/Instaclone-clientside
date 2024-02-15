@@ -10,5 +10,6 @@ if [ ! -f "$DATABASE_FILE" ]; then
     exit 1  # Exit with a non-zero status code
 fi
 
+npx webpack --watch &
 # If the database file exists, run the Flask development server
 flask --app insta485 --debug run --host 0.0.0.0 --port 8000
