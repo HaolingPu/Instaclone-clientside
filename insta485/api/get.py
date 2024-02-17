@@ -281,15 +281,44 @@ def delete_likes(likeid):
     connection.commit()
     return flask.jsonify({}), 204
 
-@insta485.app.route('/api/v1/likes/?postid=<postid>', methods=['POST'])
+@insta485.app.route('/api/v1/likes/', methods=['POST'])
 def post_like():
-
-    #check authorization
-
+    if check_auth() is False:
+        return flask.jsonify({}), 403
+    else :
+        logname = session['username']
     connection = insta485.model.get_db()
+    postid = flask.request.args['postid']
+    # check if postid exist / out of range
+    cur = connection.execute(
+        "SELECT * FROM posts WHERE postid = ?",
+        (postid, )
+    ).fetchone()
+    if cur is None:
+        return flask.jsonify({}), 404
+    # check if the like already existed
+    cur = connection.execute(
+        "SELECT * FROM likes WHERE owner = ? AND postid = ?",
+        (logname, postid)
+    ).fetchone()
+    if cur is not None:
+        context = {
+            "likeid": cur['likeid'],
+            "url": f"/api/v1/likes/{cur['likeid']}/", 
+        }
+        return flask.jsonify(**context), 200
     cur = connection.execute(
         "INSERT INTO likes (owner, postid) VALUES (?, ?)",
         (logname, postid)
     ).fetchone()
-
-#    return jsonify({}), 201
+    connection.commit()
+    # find the likeid
+    cur = connection.execute(
+        "SELECT * FROM likes WHERE owner = ? AND postid = ?",
+        (logname, postid)
+    ).fetchone()
+    context = {
+        "likeid": cur['likeid'],
+        "url": f"/api/v1/likes/{cur['likeid']}/", 
+    }
+    return flask.jsonify(**context), 201
