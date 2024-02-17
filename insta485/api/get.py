@@ -254,47 +254,42 @@ def get_post(postid_url_slug):
       "postid": postid_url_slug,
       "url": f"/api/v1/posts/{postid_url_slug}/"
     }
-<<<<<<< Updated upstream
-    return flask.jsonify(**context)
-=======
     return flask.jsonify(**context)
 
 
-@insta485.app.route('/api/v1/likes/<int:likeid>/')
+@insta485.app.route('/api/v1/likes/<likeid>/', methods=['DELETE'])
 def delete_likes(likeid):
 
     #check authorization
-
+    if check_auth() is False:
+        return flask.jsonify({}), 403
+    else :
+        logname = session['username']
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT DISTINCT owner FROM likes WHERE likeid = ?",
         (likeid,)
     ).fetchone()
     if cur is None:
-        return jsonify({}), 404
-    if cur.owner is not logname:
-        return jsonify({}), 403
+        return flask.jsonify({}), 404
+    if cur['owner'] != logname:
+        return flask.jsonify({}), 403
     connection.execute(
-            "DELETE FROM posts WHERE likeid = ?",
-            (logname, postid)
+            "DELETE FROM likes WHERE likeid = ?",
+            (likeid,)
         )
-    return jsonify({}), 204
+    connection.commit()
+    return flask.jsonify({}), 204
 
 @insta485.app.route('/api/v1/likes/?postid=<postid>', methods=['POST'])
 def post_like():
+
     #check authorization
+
     connection = insta485.model.get_db()
     cur = connection.execute(
-        "SELECT DISTINCT owner FROM likes WHERE likeid = ?",
-        (likeid,)
+        "INSERT INTO likes (owner, postid) VALUES (?, ?)",
+        (logname, postid)
     ).fetchone()
-    if cur is None:
-        return jsonify({}), 404
-    if cur.owner is not logname:
-        return jsonify({}), 403
-    connection.execute(
-            "DELETE FROM posts WHERE likeid = ?",
-            (logname, postid)
-        )
-    return jsonify({}), 204
->>>>>>> Stashed changes
+
+#    return jsonify({}), 201
