@@ -24,14 +24,8 @@ def get_page():
     The URL of the next page of posts is returned in next. 
     Note that postid is an int, not a string."""
 
-    if 'username' not in session:
-        auth = flask.request.authorization
-        if auth:
-            username = auth["username"]
-            password = auth["password"]
-        if not auth or not check_auth(username, password):
-            return flask.jsonify({"message": "Forbidden", "status_code": 403}), 403
-        session['username'] = username
+    if not check_auth():
+        return flask.jsonify({"message": "Forbidden", "status_code": 403}), 403
 
     connection = insta485.model.get_db()
     logname = session['username']
@@ -106,8 +100,20 @@ def get_page():
 
 
 
-def check_auth(username, password):
+def check_auth():
     connection = insta485.model.get_db()
+    if 'username' in session:
+        return True
+        
+    auth = flask.request.authorization
+    if auth is None:
+        return False
+    else:
+        username = auth["username"]
+        password = auth["password"]
+    if not username or not password:
+        return False
+    
     cur = connection.execute(
         "SELECT password FROM users WHERE username = ?", (username,)
     )
@@ -115,6 +121,7 @@ def check_auth(username, password):
     if result is not None:
         password_string = result['password']
         if verify_password(password_string,password):
+            session['username'] = username
             return True
     return False
 
