@@ -281,6 +281,8 @@ def delete_likes(likeid):
     connection.commit()
     return flask.jsonify({}), 204
 
+
+
 @insta485.app.route('/api/v1/likes/', methods=['POST'])
 def post_like():
     if check_auth() is False:
@@ -322,3 +324,26 @@ def post_like():
         "url": f"/api/v1/likes/{cur['likeid']}/", 
     }
     return flask.jsonify(**context), 201
+
+
+#delete comments
+@insta485.app.route('/api/v1/comments/<int:commentid>/', methods=['DELETE'])
+def delete_comments(commentid):
+    if not check_auth():
+        return flask.jsonify({"message": "Forbidden", "status_code": 403}), 403
+    logname = session['username']
+    connection = insta485.model.get_db()
+    comment = connection.execute(
+        "SELECT * FROM comments WHERE commentid = ?", (commentid, )
+    ).fetchone()
+    print(comment)
+    if comment is None:
+        return flask.jsonify({}), 404
+    owner = comment['owner']
+    if owner != logname:
+        return flask.jsonify({}), 403
+    connection.execute(
+        "DELETE FROM comments WHERE commentid = ?",(commentid, )
+    )
+    connection.commit()
+    return flask.jsonify({}), 204
