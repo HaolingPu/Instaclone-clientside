@@ -126,19 +126,6 @@ def check_auth():
     return False
 
 
-
-# def hash_password(password):
-#     """Hash password."""
-#     algorithm = 'sha512'
-#     salt = uuid.uuid4().hex
-#     hash_obj = hashlib.new(algorithm)
-#     password_salted = salt + password
-#     hash_obj.update(password_salted.encode('utf-8'))
-#     password_hash = hash_obj.hexdigest()
-#     password_db_string = "$".join([algorithm, salt, password_hash])
-#     return password_db_string
-
-
 def verify_password(stored_password, input_password):
     """Verify password."""
     algorithm, salt, stored_hash = stored_password.split('$')
@@ -268,24 +255,3 @@ def get_post(postid_url_slug):
       "url": f"/api/v1/posts/{postid_url_slug}/"
     }
     return flask.jsonify(**context)
-
-
-@insta485.app.route('/api/v1/likes/<likeid>/')
-def delete_likes(likeid):
-
-    #check authorization
-
-    connection = insta485.model.get_db()
-    cur = connection.execute(
-        "SELECT DISTINCT owner FROM likes WHERE likeid = ?",
-        (likeid,)
-    ).fetchone()
-    if cur is None:
-        return jsonify({}), 404
-    if cur.owner is not logname:
-        return jsonify({}), 403
-    connection.execute(
-            "DELETE FROM posts WHERE likeid = ?",
-            (logname, postid)
-        )
-    return jsonify({}), 204
