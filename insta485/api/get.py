@@ -19,7 +19,7 @@ def get_resources():
 
 
 @insta485.app.route('/api/v1/posts/')
-def get_posts():
+def get_page():
     """Return the 10 newest posts. 
     The URL of the next page of posts is returned in next. 
     Note that postid is an int, not a string."""
@@ -140,3 +140,125 @@ def verify_password(stored_password, input_password):
     hash_obj.update(password_salted.encode('utf-8'))
     input_hash = hash_obj.hexdigest()
     return stored_hash == input_hash
+
+
+
+# post_id
+"""REST API for posts."""
+
+
+@insta485.app.route('/api/v1/posts/<int:postid_url_slug>/')
+def get_post(postid_url_slug):
+    """Return post on postid.
+
+    Example:
+    {
+      "created": "2017-09-28 04:33:28",
+      "imgUrl": "/uploads/122a7d27ca1d7420a1072f695d9290fad4501a41.jpg",
+      "owner": "awdeorio",
+      "ownerImgUrl": "/uploads/e1a7c5c32973862ee15173b0259e3efdb6a391af.jpg",
+      "ownerShowUrl": "/users/awdeorio/",
+      "postShowUrl": "/posts/1/",
+      "postid": 1,
+      "url": "/api/v1/posts/1/"
+    }
+    """
+    logname = ''
+    if 'username' in flask.session:
+      logname = flask.session["username"]
+    else:
+      # 验证authorization
+
+      logname = flask.request.authorization["username"]
+
+    connection = insta485.model.get_db()
+    cur = connection.execute(
+        "SELECT owner, created, filename "
+        "FROM posts "
+        "WHERE postid == ?",
+        (postid_url_slug, )
+    )
+    owner = cur.fetchone()
+    if not owner:
+      return flask.jsonify({"message": "Not Found", "status_code": 404}), 404
+    
+    cur = connection.execute(
+        "SELECT filename "
+        "FROM users "
+        "WHERE username == ?",
+        (owner["owner"], )
+    )
+    ownerimg = cur.fetchone()["filename"]
+
+    cur = connection.execute(
+        "SELECT * "
+        "FROM likes "
+        "WHERE owner == ? AND postid == ?",
+        (logname, postid_url_slug,)
+    )
+    LikeThis = False
+    likeurl = None
+    cur = cur.fetchone()
+    if cur:
+      LikeThis = True
+      likeid = cur["likeid"]
+      likeurl = f"/api/v1/likes/{likeid}/"
+
+    cur = connection.execute(
+        "SELECT * "
+        "FROM likes "
+        "WHERE postid == ?",
+        (postid_url_slug, )
+    )
+    numlike = len(cur.fetchall())
+    ownerusername = owner["owner"]
+
+    # comments
+    cur = connection.execute(
+        "SELECT commentid, owner, text "
+        "FROM comments "
+        "WHERE postid == ?",
+        (postid_url_slug, )
+    )
+
+    comments = cur.fetchall()
+    # comments = [{
+    #   "commentid": 1,
+    #   "owner": "awdeorio",
+    #   "text": "#chickensofinstagram",
+    # }, {...}, ...]
+
+
+    #  need to add:
+    #  "lognameOwnsThis": true,
+    #  "url": "/api/v1/comments/1/"
+    #  "ownerShowUrl": "/users/awdeorio/"
+
+    for comment in comments:
+      if logname == comment["owner"]:
+        comment["lognameOwnsThis"] = True
+      else: 
+        comment["lognameOwnsThis"] = False
+      cd = comment["commentid"]
+      comment["url"] = f"/api/v1/comments/{cd}/"
+      osu = comment["owner"]
+      comment["ownerShowUrl"] = f"/users/{osu}/"
+
+    context = {
+      "comments": comments,
+      "comments_url": f"/api/v1/comments/?postid={postid_url_slug}", 
+      "created": owner["created"] ,
+      "imgUrl": owner["filename"],
+      "likes": {
+        "lognameLikesThis": LikeThis,
+        "numLikes": numlike,
+        "url": likeurl
+      },
+      "owner": ownerusername,
+      "ownerImgUrl": ownerimg,
+      "ownerShowUrl": f"/users/{ownerusername}/",
+      "postShowUrl": f"/posts/{postid_url_slug}/",
+      "postid": postid_url_slug,
+      "url": f"/api/v1/posts/{postid_url_slug}/"
+    }
+    return flask.jsonify(**context)
