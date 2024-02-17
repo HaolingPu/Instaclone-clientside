@@ -145,8 +145,6 @@ def verify_password(stored_password, input_password):
 
 # post_id
 """REST API for posts."""
-
-
 @insta485.app.route('/api/v1/posts/<int:postid_url_slug>/')
 def get_post(postid_url_slug):
     """Return post on postid.
@@ -181,6 +179,7 @@ def get_post(postid_url_slug):
     owner = cur.fetchone()
     if not owner:
       return flask.jsonify({"message": "Not Found", "status_code": 404}), 404
+    postimg = owner["filename"]
     
     cur = connection.execute(
         "SELECT filename "
@@ -248,14 +247,14 @@ def get_post(postid_url_slug):
       "comments": comments,
       "comments_url": f"/api/v1/comments/?postid={postid_url_slug}", 
       "created": owner["created"] ,
-      "imgUrl": owner["filename"],
+      "imgUrl": f"/uploads/{postimg}",
       "likes": {
         "lognameLikesThis": LikeThis,
         "numLikes": numlike,
         "url": likeurl
       },
       "owner": ownerusername,
-      "ownerImgUrl": ownerimg,
+      "ownerImgUrl": f"/uploads/{ownerimg}",
       "ownerShowUrl": f"/users/{ownerusername}/",
       "postShowUrl": f"/posts/{postid_url_slug}/",
       "postid": postid_url_slug,
