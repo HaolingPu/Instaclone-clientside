@@ -261,3 +261,24 @@ def get_post(postid_url_slug):
       "url": f"/api/v1/posts/{postid_url_slug}/"
     }
     return flask.jsonify(**context)
+
+
+@insta485.app.route('/api/v1/likes/<likeid>/')
+def delete_likes(likeid):
+
+    #check authorization
+
+    connection = insta485.model.get_db()
+    cur = connection.execute(
+        "SELECT DISTINCT owner FROM likes WHERE likeid = ?",
+        (likeid,)
+    ).fetchone()
+    if cur is None:
+        return jsonify({}), 404
+    if cur.owner is not logname:
+        return jsonify({}), 403
+    connection.execute(
+            "DELETE FROM posts WHERE likeid = ?",
+            (logname, postid)
+        )
+    return jsonify({}), 204
