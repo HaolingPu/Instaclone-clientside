@@ -257,7 +257,7 @@ def get_post(postid_url_slug):
     return flask.jsonify(**context)
 
 
-@insta485.app.route('/api/v1/likes/<likeid>/', methods=['DELETE'])
+@insta485.app.route('/api/v1/likes/<int:likeid>/', methods=['DELETE'])
 def delete_likes(likeid):
 
     #check authorization
@@ -315,13 +315,13 @@ def post_like():
     ).fetchone()
     connection.commit()
     # find the likeid
+    
     cur = connection.execute(
-        "SELECT * FROM likes WHERE owner = ? AND postid = ?",
-        (logname, postid)
+        "SELECT last_insert_rowid()"
     ).fetchone()
     context = {
-        "likeid": cur['likeid'],
-        "url": f"/api/v1/likes/{cur['likeid']}/", 
+        "likeid": cur['last_insert_rowid()'],
+        "url": f"/api/v1/likes/{cur['last_insert_rowid()']}/", 
     }
     return flask.jsonify(**context), 201
 
@@ -347,3 +347,40 @@ def delete_comments(commentid):
     )
     connection.commit()
     return flask.jsonify({}), 204
+
+
+@insta485.app.route('/api/v1/comments/', methods=['POST'])
+def post_comment():
+    if check_auth() is False:
+        return flask.jsonify({}), 403
+    else :
+        logname = session['username']
+    connection = insta485.model.get_db()
+    postid = flask.request.args['postid']
+    # check if postid exist / out of range
+    cur = connection.execute(
+        "SELECT * FROM comments WHERE postid = ?",
+        (postid, )
+    ).fetchone()
+    if cur is None:
+        return flask.jsonify({}), 404
+    # insert
+    text = flask.request.json.get("text", None)
+    cur = connection.execute(
+        "INSERT INTO comments (owner, postid, text) VALUES (?, ?, ?)",
+        (logname, postid, text)
+    ).fetchone()
+    connection.commit()
+    # get last row id
+    cur = connection.execute(
+        "SELECT last_insert_rowid()"
+    ).fetchone()
+    context = {
+        "commentid": cur['last_insert_rowid()'],
+        "lognameOwnsThis": True,
+        "owner": logname,
+        "ownerShowUrl": "/users/{logname}/",
+        "text": text,
+        "url": f"/api/v1/comments/{cur['last_insert_rowid()']}/"
+    }
+    return flask.jsonify(**context), 201
