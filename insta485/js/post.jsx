@@ -3,22 +3,30 @@ import PropTypes from "prop-types";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
+import Likes from './like';
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
-
 
 // The parameter of this function is an object with a string called url inside it.
 // url is a prop for the Post component.
 export default function Post({ url }) {
   /* Display image and post owner of a single post */
-
-  const [imgUrl, setImgUrl] = useState("");
-  const [owner, setOwner] = useState("");
-  const [createdTime, setCreatedTime] = useState("");
-  const [likes, setLikes] = useState({ lognameLikesThis: false, numLikes: 0 });
-  const [comments, setComments] = useState([]);
-  const [ownerImgUrl, setOwnerImgUrl] = useState("");
+  const [post, setPost] = useState({
+    comments: [],
+    comments_url: "",
+    created: "",
+    imgUrl: "",
+    lognameLikesThis: false,
+    numLikes: 0,
+    likeUrl: "",
+    owner: "",
+    ownerImgUrl: "",
+    ownerShowUrl: "",
+    postShowUrl: "",
+    postid: -1,
+    url: "",
+  });
 
 
   useEffect(() => {
@@ -32,17 +40,28 @@ export default function Post({ url }) {
         return response.json();
       })
       .then((data) => {
+        console.log("HEY!")
         // If ignoreStaleRequest was set to true, we want to ignore the results of the
         // the request. Otherwise, update the state to trigger a new render.
         if (!ignoreStaleRequest) {
-          setImgUrl(data.imgUrl);
-          setOwner(data.owner);
-    
-          setOwnerImgUrl(data.ownerImgUrl);
-          setCreatedTime(dayjs.utc(data.created).local().fromNow());
-          setLikes(data.likes);
-          setComments(data.comments);
+
+          setPost({
+            comments: data.comments,
+            comments_url: data.comments_url,
+            created: dayjs(data.created).utc(true).fromNow(),
+            imgUrl: data.imgUrl,
+            lognameLikesThis: data.likes.lognameLikesThis,
+            numLikes: data.likes.numLikes,
+            likeUrl: data.likes.url,
+            owner: data.owner,
+            ownerImgUrl: data.ownerImgUrl,
+            ownerShowUrl: data.ownerShowUrl,
+            postShowUrl: data.postShowUrl,
+            postid: data.postid,
+            url: data.url,
+          });
         }
+        
       })
       .catch((error) => console.log(error));
 
@@ -54,36 +73,85 @@ export default function Post({ url }) {
     };
   }, [url]);
 
-  // Render post image and post owner
+
+
+  const handleLikeButton = () => {
+    const targetUrl = post.lognameLikesThis ? post.likeUrl : `/api/v1/likes/?postid=${post.postid}`;
+    // const newIsLiked = !post.lognameLikesThis;
+    // const newNumLikes = post.numLikes + (newIsLiked ? 1 : -1);
+    const method = post.lognameLikesThis ? "DELETE" : "POST";
+    fetch(targetUrl,{method:method, credentials: "same-origin" })
+        .then((response) => {
+            console.log("response received");
+            if (!response.ok) throw Error(response.statusText);
+            if (response.status === 204) {
+                console.log("No content to parse");
+                return null;
+              } else {
+                return response.json();
+              }
+        })
+        .then((data) => {
+            console.log(data);
+            setPost(prevState => ({
+                ...prevState,
+                // lognameLikesThis: newIsLiked,
+                // numLikes: newNumLikes,
+                // likeUrl: newIsLiked ? data.url : null,
+                numLikes: prevState.numLikes + (prevState.lognameLikesThis ? -1 : 1),
+                lognameLikesThis:!prevState.lognameLikesThis,   
+                likeUrl: prevState.lognameLikesThis ? null : data.url,
+              }));
+        
+        })
+        .catch((error) => console.log(error));
+  };
+
+  
+
   return (
-    // <div className="post">
-    //   <img src={imgUrl} alt="post_image" />
-    //   <p>{owner}</p>
-    //   <p>Posted {createdTime}</p>
-    // </div>
-    <div class="post">
-    <a href={`/users/${owner}/`}>
-      <img src={ownerImgUrl} alt="{{ post.owner }}" className="image1" />
-      <p className="username"> {owner}</p>
+    <div className="post">
+    <a href={post.ownerShowUrl}>
+      <img src={post.ownerImgUrl} alt={post.owner}className="image1" />
+      <p className="username"> {post.owner}</p>
     </a>
-    <a href={url}>
-      <span class="time">{createdTime}</span>
+    <a href={post.postShowUrl}>
+      <span class="time">{post.created}</span>
     </a>
     <br/>
-    <a href={`/users/${owner}/`}>
-      <img src={imgUrl} alt="Post content" class="image2"/>
-    </a>
+    
+      <img src={post.imgUrl} alt="Post content" class="image2"/>
+        <p>Check!!!</p>
+        <span>{post.lognameLikesThis ? "1" : "0"} </span>
     <br/>
-    <button>{likes.lognameLikesThis ? 'Unlike' : 'Like'}</button>
-    <p>{likes.numLikes} {likes.numLikes === 1 ? 'like' : 'likes'}</p>
+    <Likes
+        numLikes={post.numLikes}
+        isLiked={post.lognameLikesThis}
+        handleLike={handleLikeButton}
+      />
     
     <br/>
-    {comments.map(comment => (
+    {post.comments.map(comment => (
           <p key={comment.commentid} className="comment">
-            <a href={comment.ownerShowUrl}>{comment.owner}</a>: {comment.text}
-          </p>
-          
+            <a href={comment.ownerShowUrl}>{comment.owner}</a>: <span data-testid="comment-text">{comment.text}</span>
+            {/* {comment.lognameOwnsThis && (
+            <button
+                onClick={() => handleDeleteComment(comment.commentid)}
+                data-testid="delete-comment-button"
+            >
+                Delete
+            </button>
+            )} */}
+          </p>  
         ))}
+    {/* <form data-testid="comment-form">
+        <input type="text" value= {newComment}
+        onChange={handleCommentChange}
+        onKeyDown={handleAddComment}
+        />
+    </form> */}
+    
+    
 </div>
   );
 }

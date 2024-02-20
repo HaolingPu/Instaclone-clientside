@@ -259,7 +259,7 @@ def get_post(postid_url_slug):
 
 @insta485.app.route('/api/v1/likes/<int:likeid>/', methods=['DELETE'])
 def delete_likes(likeid):
-
+    print("I am in DELETE likes")
     #check authorization
     if check_auth() is False:
         return flask.jsonify({}), 403
@@ -271,6 +271,7 @@ def delete_likes(likeid):
         (likeid,)
     ).fetchone()
     if cur is None:
+        print("error here?")
         return flask.jsonify({}), 404
     if cur['owner'] != logname:
         return flask.jsonify({}), 403
