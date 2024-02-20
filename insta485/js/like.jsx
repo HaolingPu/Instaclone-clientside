@@ -13,7 +13,8 @@ export default function Likes({ numLikes, isLiked, handleLike }) {
       </p>
     );
   }
-  
+
+
   Likes.propTypes = {
     numLikes: PropTypes.number.isRequired,
     isLiked: PropTypes.bool.isRequired,

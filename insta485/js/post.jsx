@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import Likes from './like';
+import Comment from "./comment";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -40,7 +41,6 @@ export default function Post({ url }) {
         return response.json();
       })
       .then((data) => {
-        console.log("HEY!")
         // If ignoreStaleRequest was set to true, we want to ignore the results of the
         // the request. Otherwise, update the state to trigger a new render.
         if (!ignoreStaleRequest) {
@@ -73,7 +73,15 @@ export default function Post({ url }) {
     };
   }, [url]);
 
-
+  function Postimg({ lognameLikesThis, img, handleLikeButton }) {
+    const doubleClick = (event) => {
+      if (lognameLikesThis === false) {
+        handleLikeButton(event)
+      }
+  
+    };
+    return (< img src={img} onDoubleClick={doubleClick} alt="485post" className="image2"/>);
+  }
 
   const handleLikeButton = () => {
     const targetUrl = post.lognameLikesThis ? post.likeUrl : `/api/v1/likes/?postid=${post.postid}`;
@@ -82,7 +90,6 @@ export default function Post({ url }) {
     const method = post.lognameLikesThis ? "DELETE" : "POST";
     fetch(targetUrl,{method:method, credentials: "same-origin" })
         .then((response) => {
-            console.log("response received");
             if (!response.ok) throw Error(response.statusText);
             if (response.status === 204) {
                 console.log("No content to parse");
@@ -92,12 +99,9 @@ export default function Post({ url }) {
               }
         })
         .then((data) => {
-            console.log(data);
+
             setPost(prevState => ({
                 ...prevState,
-                // lognameLikesThis: newIsLiked,
-                // numLikes: newNumLikes,
-                // likeUrl: newIsLiked ? data.url : null,
                 numLikes: prevState.numLikes + (prevState.lognameLikesThis ? -1 : 1),
                 lognameLikesThis:!prevState.lognameLikesThis,   
                 likeUrl: prevState.lognameLikesThis ? null : data.url,
@@ -112,44 +116,30 @@ export default function Post({ url }) {
   return (
     <div className="post">
     <a href={post.ownerShowUrl}>
-      <img src={post.ownerImgUrl} alt={post.owner}className="image1" />
+      <img src={post.ownerImgUrl} alt={post.owner} className="image1" />
       <p className="username"> {post.owner}</p>
     </a>
     <a href={post.postShowUrl}>
-      <span class="time">{post.created}</span>
+      <span className="time">{post.created}</span>
     </a>
     <br/>
     
-      <img src={post.imgUrl} alt="Post content" class="image2"/>
+      {/* <img src={post.imgUrl} alt="Post content" class="image2"/>
         <p>Check!!!</p>
-        <span>{post.lognameLikesThis ? "1" : "0"} </span>
+        <span>{post.lognameLikesThis ? "1" : "0"} </span> */}
+    {/* < img src={post.imgUrl} alt="Post content" class="image2" /> */}
+      <Postimg lognameLikesThis={post.lognameLikesThis} img={post.imgUrl} handleLikeButton={handleLikeButton} />
     <br/>
-    <Likes
+    {post.url && (<Likes
         numLikes={post.numLikes}
         isLiked={post.lognameLikesThis}
         handleLike={handleLikeButton}
-      />
+      />)
+    }
     
     <br/>
-    {post.comments.map(comment => (
-          <p key={comment.commentid} className="comment">
-            <a href={comment.ownerShowUrl}>{comment.owner}</a>: <span data-testid="comment-text">{comment.text}</span>
-            {/* {comment.lognameOwnsThis && (
-            <button
-                onClick={() => handleDeleteComment(comment.commentid)}
-                data-testid="delete-comment-button"
-            >
-                Delete
-            </button>
-            )} */}
-          </p>  
-        ))}
-    {/* <form data-testid="comment-form">
-        <input type="text" value= {newComment}
-        onChange={handleCommentChange}
-        onKeyDown={handleAddComment}
-        />
-    </form> */}
+
+    <Comment url={post.url} />
     
     
 </div>
