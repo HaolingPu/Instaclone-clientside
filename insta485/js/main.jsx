@@ -9,5 +9,8 @@ const root = createRoot(document.getElementById("reactEntry"));
 // Insert the post component into the DOM
 
 root.render(
-    <Feed />
+    <StrictMode>
+        <Feed url='/api/v1/posts/' />
+    </StrictMode>
+    
 );

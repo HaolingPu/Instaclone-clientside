@@ -20,6 +20,7 @@ export default function Comment({ url }) {
           return response.json();
         })
         .then((data) => {
+          // console.log(data);
           if (!ignoreStaleRequest) {
             setComment(data.comments);
             setcommentUrl(data.comments_url);
@@ -55,7 +56,7 @@ export default function Comment({ url }) {
                 setComment(prevComments => [...prevComments, {...addedComment, lognameOwnsThis: true}]);
                 setNewComment(""); // Clear input field after successful submission
                 })
-                .catch(error => console.error('Error adding comment:', error));
+                .catch((error) => {console.error('Error adding comment:', error)});
             }
     };
 

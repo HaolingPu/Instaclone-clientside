@@ -73,8 +73,13 @@ def get_page():
     posts = connection.execute(base_query, params).fetchall()
 
     next_url = ""
-    if len(posts) == size:
-        next_url = f"/api/v1/posts/?size={size}&page={page + 1}"
+    print("BEFORE")
+    print("NUMBER OF POSTS ", len(posts))
+    #print("PAGE ", page)
+    if len(posts) >= size:
+        next_url = f"/api/v1/posts/?size={size}&page={page+1}"
+        print("AFTER")
+        print("PAGE ", page)
         if postid_lte:
             next_url += f"&postid_lte={postid_lte}"
    
@@ -89,7 +94,7 @@ def get_page():
     exact_request_url = "/api/v1/posts/"
     if request.query_string:
         exact_request_url += f"?{request.query_string.decode('utf-8')}"
-
+    print("NEXTURL ", next_url)
     context = {
         "next":next_url,
         "results":results,
