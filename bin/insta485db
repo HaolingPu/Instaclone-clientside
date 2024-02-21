@@ -7,7 +7,7 @@ set -Eeuo pipefail
 
 # Sanity check command line options
 usage() {
-  echo "Usage: $0 (create|destroy|reset|dump)"
+  echo "Usage: $0 (create|destroy|reset|dump|random)"
 }
 
 if [ $# -ne 1 ]; then
@@ -50,7 +50,6 @@ case $1 in
 
   "random")
     DB_FILENAME=var/insta485.sqlite3
-
     for i in `seq 1 100`; do
       FILENAME="$(uuidgen).png"
       NUMS=()
