@@ -21,26 +21,26 @@ def hash_password(password):
 
 def verify_password(stored_password, input_password):
     """Verify password."""
-    algorithm, salt, stored_hash = stored_password.split('$')
-    hash_obj = hashlib.new(algorithm)
-    password_salted = salt + input_password
+    this_a, this_s, this_h = stored_password.split('$')
+    hash_obj = hashlib.new(this_a)
+    password_salted = this_s + input_password
     hash_obj.update(password_salted.encode('utf-8'))
     input_hash = hash_obj.hexdigest()
-    return stored_hash == input_hash
+    return this_h == input_hash
 
 
 def login_operation(req, connection, target_url):
     """Login operation."""
     username = req.form['username']
-    pw = req.form['password']
-    if not (username and pw):
+    this_pass = req.form['password']
+    if not (username and this_pass):
         abort(400)
     result = connection.execute(
         "SELECT username, password "
         "FROM users WHERE username = ? ",
         (username, )
     ).fetchone()
-    if result and verify_password(result['password'], pw):
+    if result and verify_password(result['password'], this_pass):
         session['username'] = result['username']
     else:
         abort(403)
@@ -50,12 +50,12 @@ def login_operation(req, connection, target_url):
 def create_operation(req, connection, target_url):
     """Create operation."""
     username = req.form['username']
-    pw = req.form['password']
+    this_pass = req.form['password']
     fullname = req.form['fullname']
     email = req.form['email']
     file = req.files['file']
     # check if any field is empty
-    if not (username and pw and fullname and email and file):
+    if not (username and this_pass and fullname and email and file):
         abort(400)
 
     stem = uuid.uuid4().hex
@@ -71,7 +71,7 @@ def create_operation(req, connection, target_url):
     ).fetchone()
     if result:
         abort(409)
-    hashed_pw = hash_password(pw)
+    hashed_pw = hash_password(this_pass)
     connection.execute(
         "INSERT INTO users (username, fullname, email, filename, password)\
         VALUES (?, ?, ?, ?, ?) ",

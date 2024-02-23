@@ -25,28 +25,28 @@ def show_posts(post_id):
         "WHERE posts.postid = ?",
         (post_id, )
     )
-    p = cur.fetchone()
+    post_slct = cur.fetchone()
 
     contexts = {}
     contexts["logname"] = logname
     contexts["postid"] = post_id
-    contexts["owner"] = p['owner']
+    contexts["owner"] = post_slct['owner']
     # print(p['user_filename'], " " ,p['post_filename'])
     # contexts["owner_img_url"] = f"/uploads/{p['user_filename']}"
     # print(contexts["owner_img_url"])
     # contexts["img_url"] = f"/uploads/{p['post_filename']}"
 
-    contexts["owner_img_url"] = p['user_filename']
-    contexts["img_url"] = p['post_filename']
+    contexts["owner_img_url"] = post_slct['user_filename']
+    contexts["img_url"] = post_slct['post_filename']
 
-    post_creation_time = arrow.get(p['created'])
+    post_creation_time = arrow.get(post_slct['created'])
     contexts["timestamp"] = post_creation_time.humanize()
     cur = connection.execute("SELECT COUNT(*) AS like_count "
                              "FROM likes "
                              "WHERE postid = ?",
                              (post_id,))
     likes_count = cur.fetchone()['like_count']
-    p['likes'] = likes_count
+    post_slct['likes'] = likes_count
 
     # check like button or unlike
     cur = connection.execute(
@@ -57,7 +57,7 @@ def show_posts(post_id):
     liked = len(result)
     contexts['likes'] = liked
 
-    p['comments'] = []
+    post_slct['comments'] = []
     cur = connection.execute("SELECT* "
                              "FROM comments "
                              "WHERE postid = ?",

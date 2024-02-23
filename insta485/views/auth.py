@@ -8,5 +8,4 @@ def show_auth():
     """Show auth."""
     if 'username' in session:
         return '', 200
-
     abort(403)

@@ -1,14 +1,13 @@
-import flask
-import insta485
-import pathlib
-import uuid
-import arrow
+"""Insta485 REST API routes."""
 import hashlib
-from flask import request, redirect, url_for, session, abort
+import flask
+from flask import request, session, abort
+import insta485
+
 
 @insta485.app.route('/api/v1/')
 def get_resources():
-    """Return a list of services available"""
+    """Return a list of services available."""
     context = {
         "comments": "/api/v1/comments/",
         "likes": "/api/v1/likes/",
@@ -20,10 +19,12 @@ def get_resources():
 
 @insta485.app.route('/api/v1/posts/')
 def get_page():
-    """Return the 10 newest posts. 
-    The URL of the next page of posts is returned in next. 
-    Note that postid is an int, not a string."""
+    """
+    Return the 10 newest posts.
 
+    The URL of the next page of posts is returned in next.
+    Note that postid is an int, not a string.
+    """
     if not check_auth():
         return flask.jsonify({"message": "Forbidden", "status_code": 403}), 403
 
@@ -31,12 +32,14 @@ def get_page():
     logname = session['username']
     postid_lte = flask.request.args.get('postid_lte', type=int)
 
-    #check for non-existing postid.
+    # check for non-existing postid.
     if postid_lte:
-        cur = connection.execute("SELECT * FROM posts WHERE postid = ?", (postid_lte,))
+        cur = connection.execute(
+            "SELECT * FROM posts WHERE postid = ?",
+            (postid_lte,))
         post = cur.fetchone()
         if post is None:
-            abort(404) 
+            abort(404)
 
     if postid_lte is None:
         cur = connection.execute(
@@ -44,15 +47,15 @@ def get_page():
             "FROM posts p "
             "LEFT JOIN following f ON p.owner = f.username2 "
             "WHERE f.username1 = ? OR p.owner = ? ",
-            (logname,logname))
+            (logname, logname))
         result = cur.fetchone()
         postid_lte = result['id'] if result else None
     size = flask.request.args.get('size', default=10, type=int)
     page = flask.request.args.get('page', default=0, type=int)
 
     if size <= 0 or page < 0:
-        return flask.jsonify({"message": "Bad Request", "status_code": 400}), 400
-    
+        cur = {"message": "Bad Request", "status_code": 400}
+        return flask.jsonify(cur), 400
     base_query = """
     SELECT DISTINCT p.postid, p.filename, p.owner, p.created
     FROM posts p
@@ -75,57 +78,51 @@ def get_page():
     next_url = ""
     print("BEFORE")
     print("NUMBER OF POSTS ", len(posts))
-    #print("PAGE ", page)
+    # print("PAGE ", page)
     if len(posts) >= size:
         next_url = f"/api/v1/posts/?size={size}&page={page+1}"
         print("AFTER")
         print("PAGE ", page)
         if postid_lte:
             next_url += f"&postid_lte={postid_lte}"
-   
     results = []
     for post in posts:
-        results.append(
-            {
-            "postid":post['postid'],
-            "url":f"/api/v1/posts/{post['postid']}/"
-             }
-            )
+        results.append({"postid": post['postid'],
+                        "url": f"/api/v1/posts/{post['postid']}/"})
     exact_request_url = "/api/v1/posts/"
     if request.query_string:
         exact_request_url += f"?{request.query_string.decode('utf-8')}"
     print("NEXTURL ", next_url)
     context = {
-        "next":next_url,
-        "results":results,
+        "next": next_url,
+        "results": results,
         "url": exact_request_url,
     }
 
-    return flask.jsonify(**context),200
-
+    return flask.jsonify(**context), 200
 
 
 def check_auth():
+    """Check the auth."""
     connection = insta485.model.get_db()
     if 'username' in session:
         return True
-        
+
     auth = flask.request.authorization
     if auth is None:
         return False
-    else:
-        username = auth["username"]
-        password = auth["password"]
+    username = auth["username"]
+    password = auth["password"]
     if not username or not password:
         return False
-    
+
     cur = connection.execute(
         "SELECT password FROM users WHERE username = ?", (username,)
     )
     result = cur.fetchone()
     if result is not None:
         password_string = result['password']
-        if verify_password(password_string,password):
+        if verify_password(password_string, password):
             session['username'] = username
             return True
     return False
@@ -141,32 +138,16 @@ def verify_password(stored_password, input_password):
     return stored_hash == input_hash
 
 
-
-# post_id
-"""REST API for posts."""
 @insta485.app.route('/api/v1/posts/<int:postid_url_slug>/')
 def get_post(postid_url_slug):
-    """Return post on postid.
-
-    Example:
-    {
-      "created": "2017-09-28 04:33:28",
-      "imgUrl": "/uploads/122a7d27ca1d7420a1072f695d9290fad4501a41.jpg",
-      "owner": "awdeorio",
-      "ownerImgUrl": "/uploads/e1a7c5c32973862ee15173b0259e3efdb6a391af.jpg",
-      "ownerShowUrl": "/users/awdeorio/",
-      "postShowUrl": "/posts/1/",
-      "postid": 1,
-      "url": "/api/v1/posts/1/"
-    }
-    """
+    """Return post on postid."""
     logname = ''
     if 'username' in flask.session:
-      logname = flask.session["username"]
+        logname = flask.session["username"]
     else:
-      # 验证authorization
+        # 验证authorization
 
-      logname = flask.request.authorization["username"]
+        logname = flask.request.authorization["username"]
 
     connection = insta485.model.get_db()
     cur = connection.execute(
@@ -177,9 +158,9 @@ def get_post(postid_url_slug):
     )
     owner = cur.fetchone()
     if not owner:
-      return flask.jsonify({"message": "Not Found", "status_code": 404}), 404
+        return flask.jsonify({"message": "Not Found", "status_code": 404}), 404
     postimg = owner["filename"]
-    
+
     cur = connection.execute(
         "SELECT filename "
         "FROM users "
@@ -194,13 +175,13 @@ def get_post(postid_url_slug):
         "WHERE owner == ? AND postid == ?",
         (logname, postid_url_slug,)
     )
-    LikeThis = False
+    likethis = False
     likeurl = None
     cur = cur.fetchone()
     if cur:
-      LikeThis = True
-      likeid = cur["likeid"]
-      likeurl = f"/api/v1/likes/{likeid}/"
+        likethis = True
+        likeid = cur["likeid"]
+        likeurl = f"/api/v1/likes/{likeid}/"
 
     cur = connection.execute(
         "SELECT * "
@@ -225,51 +206,49 @@ def get_post(postid_url_slug):
     #   "owner": "awdeorio",
     #   "text": "#chickensofinstagram",
     # }, {...}, ...]
-
-
     #  need to add:
     #  "lognameOwnsThis": true,
     #  "url": "/api/v1/comments/1/"
     #  "ownerShowUrl": "/users/awdeorio/"
 
     for comment in comments:
-      if logname == comment["owner"]:
-        comment["lognameOwnsThis"] = True
-      else: 
-        comment["lognameOwnsThis"] = False
-      cd = comment["commentid"]
-      comment["url"] = f"/api/v1/comments/{cd}/"
-      osu = comment["owner"]
-      comment["ownerShowUrl"] = f"/users/{osu}/"
+        if logname == comment["owner"]:
+            comment["lognameOwnsThis"] = True
+        else:
+            comment["lognameOwnsThis"] = False
+        cur = comment["commentid"]
+        comment["url"] = f"/api/v1/comments/{cur}/"
+        cur = comment["owner"]
+        comment["ownerShowUrl"] = f"/users/{cur}/"
 
     context = {
-      "comments": comments,
-      "comments_url": f"/api/v1/comments/?postid={postid_url_slug}", 
-      "created": owner["created"] ,
-      "imgUrl": f"/uploads/{postimg}",
-      "likes": {
-        "lognameLikesThis": LikeThis,
-        "numLikes": numlike,
-        "url": likeurl
-      },
-      "owner": ownerusername,
-      "ownerImgUrl": f"/uploads/{ownerimg}",
-      "ownerShowUrl": f"/users/{ownerusername}/",
-      "postShowUrl": f"/posts/{postid_url_slug}/",
-      "postid": postid_url_slug,
-      "url": f"/api/v1/posts/{postid_url_slug}/"
+        "comments": comments,
+        "comments_url": f"/api/v1/comments/?postid={postid_url_slug}",
+        "created": owner["created"],
+        "imgUrl": f"/uploads/{postimg}",
+        "likes": {
+            "lognameLikesThis": likethis,
+            "numLikes": numlike,
+            "url": likeurl
+        },
+        "owner": ownerusername,
+        "ownerImgUrl": f"/uploads/{ownerimg}",
+        "ownerShowUrl": f"/users/{ownerusername}/",
+        "postShowUrl": f"/posts/{postid_url_slug}/",
+        "postid": postid_url_slug,
+        "url": f"/api/v1/posts/{postid_url_slug}/"
     }
     return flask.jsonify(**context)
 
 
 @insta485.app.route('/api/v1/likes/<int:likeid>/', methods=['DELETE'])
 def delete_likes(likeid):
+    """Delete the like."""
     print("I am in DELETE likes")
-    #check authorization
+    # check authorization
     if check_auth() is False:
         return flask.jsonify({}), 403
-    else :
-        logname = session['username']
+    logname = session['username']
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT DISTINCT owner FROM likes WHERE likeid = ?",
@@ -288,13 +267,13 @@ def delete_likes(likeid):
     return flask.jsonify({}), 204
 
 
-
 @insta485.app.route('/api/v1/likes/', methods=['POST'])
 def post_like():
+    """Post the like."""
     if check_auth() is False:
         return flask.jsonify({}), 403
-    else :
-        logname = session['username']
+
+    logname = session['username']
     connection = insta485.model.get_db()
     postid = flask.request.args['postid']
     # check if postid exist / out of range
@@ -312,7 +291,7 @@ def post_like():
     if cur is not None:
         context = {
             "likeid": cur['likeid'],
-            "url": f"/api/v1/likes/{cur['likeid']}/", 
+            "url": f"/api/v1/likes/{cur['likeid']}/",
         }
         return flask.jsonify(**context), 200
     cur = connection.execute(
@@ -321,20 +300,21 @@ def post_like():
     ).fetchone()
     connection.commit()
     # find the likeid
-    
+
     cur = connection.execute(
         "SELECT last_insert_rowid()"
     ).fetchone()
     context = {
         "likeid": cur['last_insert_rowid()'],
-        "url": f"/api/v1/likes/{cur['last_insert_rowid()']}/", 
+        "url": f"/api/v1/likes/{cur['last_insert_rowid()']}/",
     }
     return flask.jsonify(**context), 201
 
 
-#delete comments
+# delete comments
 @insta485.app.route('/api/v1/comments/<int:commentid>/', methods=['DELETE'])
 def delete_comments(commentid):
+    """Delete the comment."""
     if not check_auth():
         return flask.jsonify({"message": "Forbidden", "status_code": 403}), 403
     logname = session['username']
@@ -349,7 +329,7 @@ def delete_comments(commentid):
     if owner != logname:
         return flask.jsonify({}), 403
     connection.execute(
-        "DELETE FROM comments WHERE commentid = ?",(commentid, )
+        "DELETE FROM comments WHERE commentid = ?", (commentid, )
     )
     connection.commit()
     return flask.jsonify({}), 204
@@ -357,10 +337,10 @@ def delete_comments(commentid):
 
 @insta485.app.route('/api/v1/comments/', methods=['POST'])
 def post_comment():
+    """Post the comment."""
     if check_auth() is False:
         return flask.jsonify({}), 403
-    else :
-        logname = session['username']
+    logname = session['username']
     connection = insta485.model.get_db()
     postid = flask.request.args['postid']
     # check if postid exist / out of range

@@ -156,10 +156,10 @@ def show_index():
     posts = cur.fetchall()
 
     context_posts = []
-    for p in posts:
+    for this_post in posts:
         post_dict = {}
-        post_dict["postid"] = p['postid']
-        post_dict["owner"] = p['owner']
+        post_dict["postid"] = this_post['postid']
+        post_dict["owner"] = this_post['owner']
 
         # cur = connection.execute("SELECT filename "
         #                          "FROM users "
@@ -167,9 +167,9 @@ def show_index():
         #                          (post_dict['owner'], ))
         # ownerimg_url = cur.fetchone()
 
-        post_dict["owner_img_url"] = p['user_filename']
-        post_dict["img_url"] = p['post_filename']
-        post_creation_time = arrow.get(p['created'])
+        post_dict["owner_img_url"] = this_post['user_filename']
+        post_dict["img_url"] = this_post['post_filename']
+        post_creation_time = arrow.get(this_post['created'])
         post_dict["timestamp"] = post_creation_time.humanize()
 
         cur = connection.execute("SELECT COUNT(*) AS like_count "
@@ -194,10 +194,10 @@ def show_index():
                                  "WHERE postid = ?",
                                  (post_dict['postid'], ))
         comments = cur.fetchall()
-        for c in comments:
+        for this_comment in comments:
             post_dict["comments"].append({
-                "owner": c['owner'],
-                "text": c['text']
+                "owner": this_comment['owner'],
+                "text": this_comment['text']
             })
 
         context_posts.append(post_dict)

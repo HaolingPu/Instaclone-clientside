@@ -32,10 +32,10 @@ def show_following(user_url_slug):
     )
     following = cur.fetchall()
     context_following = []
-    for p in following:
+    for thepost in following:
         following_dict = {}
-        following_dict["username"] = p['username2']
-        following_dict["user_img_url"] = f"/uploads/{p['user_filename']}"
+        following_dict["username"] = thepost['username2']
+        following_dict["user_img_url"] = f"/uploads/{thepost['user_filename']}"
 
         # check following or not following
         cur = connection.execute(

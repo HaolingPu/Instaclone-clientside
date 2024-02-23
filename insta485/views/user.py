@@ -59,8 +59,8 @@ def show_user(user_url_slug):
 
     posts = cur.fetchall()
     total_posts = len(posts)
-    for p in posts:
-        p["img_url"] = p["filename"]
+    for this_post in posts:
+        this_post["img_url"] = this_post["filename"]
 
     # fullname
     cur = connection.execute(

@@ -33,10 +33,10 @@ def show_followers(user_url_slug):
     )
     followers = cur.fetchall()
     context_followers = []  # is an arrary containing many dictionaries
-    for p in followers:
+    for thepost in followers:
         followers_dict = {}
-        followers_dict["username"] = p['username1']
-        followers_dict["user_img_url"] = f"/uploads/{p['user_filename']}"
+        followers_dict["username"] = thepost['username1']
+        followers_dict["user_img_url"] = f"/uploads/{thepost['user_filename']}"
 
         # check following or not following
         cur = connection.execute(
