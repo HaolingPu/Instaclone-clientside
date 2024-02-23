@@ -9,47 +9,38 @@ import Post from "./post"; // Import your Post component
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
-export default function Feed({ url }) {
+export default function Feed({url}) {
   const [posts, setPosts] = useState([]);
   const [nextUrl, setNextUrl] = useState("");
-  const fetchData = (next) => {
-    fetch(next, { credentials: "same-origin" })
+  const fetchData = () => {
+    fetch(url, { credentials: "same-origin" })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error('Network response was not ok');
         }
         return response.json();
       })
       .then((data) => {
         const postList = [];
         setNextUrl(data.next);
-        for (let i = 0; i < data.results.length; i += 1) {
-          postList.push(data.results[i]);
+        for (let i = 0; i < data.results.length; i+=1){
+          postList.push(data.results[i])
         }
         setPosts([...posts, ...postList]);
       })
-      .catch((error) => {
-        console.error(
-          "There has been a problem with your fetch operation:",
-          error,
-        );
-      });
+      .catch((error) => {console.error('There has been a problem with your fetch operation:', error)});
   };
   useEffect(() => {
     fetchData(url);
-  }, [url]);
-  // posts.map((post) => {
-  //   console.log("Post ID: ", post.postid); // Logging postid
-  // });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <InfiniteScroll
       dataLength={posts.length} // This is important field to render the next data
-      next={() => {
-        fetchData(nextUrl);
-      }}
+      next={() => {fetchData(nextUrl);}}
       hasMore={!!nextUrl}
     >
-      {posts.map((post) => (
+      {posts.map(post => (
         <Post key={`${post.postid}`} url={`/api/v1/posts/${post.postid}/`} />
       ))}
     </InfiniteScroll>
