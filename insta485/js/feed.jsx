@@ -37,7 +37,7 @@ export default function Feed({ url }) {
   };
   useEffect(() => {
     fetchData(url);
-  }, []);
+  }, [url]);
   // posts.map((post) => {
   //   console.log("Post ID: ", post.postid); // Logging postid
   // });
